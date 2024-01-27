@@ -16,12 +16,13 @@ const uploadOnCloudinary = async function(localFilePath) {
     const response = await cloudinary.uploader.upload(
       localFilePath,
       {
+        folder: "youtubeApiClone",
         resource_type: "auto"
       }
     )
     
     //file has been uploaded
-    console.log("file has been uploaded on clodinary ", response.url);
+    fs.unlinkSync(localFilePath)
     return response;
 
   } catch (error) {

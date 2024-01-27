@@ -6,7 +6,7 @@ const router = Router();
 
 // before processing the data it is sent through the multer middleware which uploads files on the server
 router.route("/register").post(
-  uploadOnServer.fields([
+  uploadOnServer.fields([ //specify which fields to take as files from post request
     {
       name: "avatar",
       maxCount: 1

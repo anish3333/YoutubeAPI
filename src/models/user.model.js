@@ -37,14 +37,14 @@ const userSchema = new Schema(
                 type: Schema.Types.ObjectId,
                 ref: "Video"
             }
-        ],
+        ], //by default empty
         password: {
             type: String,
             required: [true, 'Password is required']
         },
         refreshToken: {
             type: String
-        },
+        }, //by default empty
 
         
     },

@@ -31,4 +31,9 @@ const uploadOnCloudinary = async function(localFilePath) {
   }
 }
 
+const deleteOnCloudinary = async function(){
+
+}
+
+
 export {uploadOnCloudinary}

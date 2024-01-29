@@ -1,5 +1,7 @@
 import mongoose,{Schema} from 'mongoose';
 
+
+// this schema represents a channel being subscribed by a subscriber
 const subscriptionSchema = new Schema(
   {
     subscriber: {
@@ -7,7 +9,7 @@ const subscriptionSchema = new Schema(
       ref: "User"
     },
     channel: {
-      type: Schema.Types.ObjectId, //the user subscribers are subscribing to
+      type: Schema.Types.ObjectId, //the one being subscribed
       ref: "User"
     }
   },

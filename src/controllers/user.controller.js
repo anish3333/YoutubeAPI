@@ -1,8 +1,9 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken"
 
 const generateBothTokens = async (userId) => {
@@ -228,6 +229,8 @@ const changeCurrentPassword = asyncHandler( async(req, res) => {
 
   //req.user contains the json data and we cant control the user itself from it
   const user = await User.findById(req.user?._id);
+  // console.log("User: ", user);
+  // console.log("req.user: ", req.user);
 
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
@@ -288,7 +291,7 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
   
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   if(!avatar) throw new ApiError(400, "file didnt get uploaded on the cloud")
-  
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -298,6 +301,12 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
     },
     {new: true}
   ).select("-password -refreshToken")
+
+
+  // delete the old avatar after uploading the new one
+  if(!deleteOnCloudinary("youtubeApiClone", req.user.avatar)){
+    throw new ApiError(400, "old file didnt get deleted froms the cloud")
+  }
 
   return res
     .status(200)
@@ -309,8 +318,6 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
 const updateUserCoverImage = asyncHandler(async(req, res) => {
   const coverImageLocalPath = req.file?.path
   if(!coverImageLocalPath) throw new ApiError(400, "cover Image file is missing")
-
-  // todo: deleting the  old image on updating the cloud
  
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
   if(!coverImage) throw new ApiError(400, "file didnt get uploaded on the cloud")
@@ -324,6 +331,12 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
     },
     {new: true}
   ).select("-password -refreshToken")
+
+  // delete the old coverImage after uploading the new one
+
+  if(!deleteOnCloudinary("youtubeApiClone", req.user.coverImage)){
+    throw new ApiError(400, "old file didnt get deleted froms the cloud")
+  }
 
   return res
     .status(200)

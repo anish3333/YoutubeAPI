@@ -31,9 +31,20 @@ const uploadOnCloudinary = async function(localFilePath) {
   }
 }
 
-const deleteOnCloudinary = async function(){
+const deleteOnCloudinary = async function(folderName, cloudPath){
+  try {
+    const fullPublicId = `${folderName}/${cloudPath.match(/\/([^/]+)\.jpg$/)?.[1]}`;
+    
+    const response = await cloudinary.uploader.destroy(
+      fullPublicId
+    )
 
+    return response;
+  } catch (error) {
+    console.log("Error while Deleting cloudinary file: ",error)
+    return null;
+  }
 }
 
 
-export {uploadOnCloudinary}
+export {uploadOnCloudinary, deleteOnCloudinary}

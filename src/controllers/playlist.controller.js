@@ -85,7 +85,8 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
 const deletePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
-  const result = await Playlist.deleteOne({ _id: playlistId });
+  // const result = await Playlist.deleteOne({ _id: playlistId });
+  const result = await Playlist.findByIdAndDelete(playlistId);
   /*
   result -> {
     result: true,

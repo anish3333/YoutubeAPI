@@ -12,17 +12,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
   const parsedPage = parseInt(page);
   const parsedLimit = parseInt(limit);
 
-  if (
-    isNaN(parsedPage) ||
-    isNaN(parsedLimit) ||
-    parsedPage < 1 ||
-    parsedLimit < 1
-  ) {
+  if (isNaN(parsedPage) || isNaN(parsedLimit) || parsedPage < 1 || parsedLimit < 1) {
     return res
       .status(400)
       .json(new ApiResponse(400, null, "Invalid page or limit parameters."));
   }
-
   try {
     const match = { owner: req.user._id };
     const sort = {};
@@ -38,7 +32,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
     };
 
     const result = await Video.paginate(match, options);
-
     return res
       .status(200)
       .json(new ApiResponse(200, result, "Videos fetched successfully"));

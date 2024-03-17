@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteOnCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -17,7 +17,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
       .status(400)
       .json(new ApiResponse(400, null, "Invalid page or limit parameters."));
   }
-  try {
+  // try {
     const match = { owner: req.user._id };
     const sort = {};
 
@@ -31,15 +31,16 @@ const getAllVideos = asyncHandler(async (req, res) => {
       sort: sort,
     };
 
-    const result = await Video.paginate(match, options);
+    const result = await Video.aggregatePaginate(match, options);
     return res
       .status(200)
       .json(new ApiResponse(200, result, "Videos fetched successfully"));
-  } catch (error) {
-    return res
-      .status(500)
-      .json(new ApiResponse(500, null, "Internal server error"));
-  }
+
+  // } catch (error) {
+  //   return res
+  //     .status(500)
+  //     .json(new ApiResponse(500, null, "Internal server error"));
+  // }
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -107,10 +108,24 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  const video = await Video.findById(videoId)
+
+  const isVideoDeleted = await deleteOnCloudinary("youtubeApiClone", video.videoFile)
+  const isThumbNailDeleted = await deleteOnCloudinary("youtubeApiClone", video.thumbnail)
+
+  if(!isVideoDeleted){
+    throw new ApiError(400, "video didnt get deleted froms the cloud")
+  }
+  if(!isThumbNailDeleted){
+    throw new ApiError(400, "thumbnail didnt get deleted froms the cloud")
+  }
+  
   const result = await Video.findByIdAndDelete(videoId);
-  if (!result || result.deletedCount === undefined) {
+
+  if (!result) {
     throw new ApiError(400, "Error occurred while deleting video.");
   }
+
   res.status(201).json(new ApiResponse(200, "Video Deleted Successfully"));
 });
 

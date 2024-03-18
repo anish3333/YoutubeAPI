@@ -44,7 +44,13 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
-  const subs = await Subscription.find({ channel: channelId });
+  const channel = await User.findById(channelId).select(
+    "-password -refreshToken -createdAt -updatedAt"
+  );
+  const subs = await Subscription.find({ channel: channelId }).populate({
+    path: "subscriber",
+    select: "-password -refreshToken -createdAt -updatedAt",
+  });
   const count = subs.length;
 
   return res
@@ -52,7 +58,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { subs, count },
+        { channel, subs, count },
         "Subscriptions retrieved successfully"
       )
     );
@@ -61,14 +67,24 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
-  const channels = await Subscription.find({ subscriber: subscriberId });
+  const subscriber = await User.findById(subscriberId).select(
+    "-password -refreshToken -createdAt -updatedAt"
+  );
+  const channels = await Subscription.find({
+    subscriber: subscriberId,
+  }).populate({
+    path: "channel",
+    select: "-password -refreshToken -createdAt -updatedAt",
+  });
+
   const count = channels.length;
+
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        { channels, count },
+        { subscriber, channels, count },
         "Channels retrieved successfully"
       )
     );
@@ -79,7 +95,7 @@ const isUserSubscribed = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
 
   const user = req.user._id;
-  
+
   const isSubscribed = await Subscription.findOne({
     subscriber: user,
     channel: channelId,

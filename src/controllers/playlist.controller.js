@@ -8,7 +8,7 @@ import { Video } from "../models/video.model.js";
 
 const createPlaylist = asyncHandler(async (req, res) => {
   //TODO: create playlist
-  const { name, description } = req.body;
+  const { name, description, videos } = req.body;
   if (!name || !description) {
     throw new ApiError(
       400,
@@ -21,7 +21,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
   const playlist = await Playlist.create({
     name,
     description,
-    videos: [],
+    videos,
     owner: user._id,
   });
 
@@ -36,7 +36,9 @@ const createPlaylist = asyncHandler(async (req, res) => {
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  const userPlaylists = await Playlist.find({ owner: userId }).populate("videos");
+  const userPlaylists = await Playlist.find({ owner: userId }).populate(
+    "videos"
+  );
 
   if (!userPlaylists || userPlaylists.length === 0) {
     return res
@@ -66,6 +68,13 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   const video = await Video.findById(videoId);
 
   if (!video) throw new ApiError(400, "Invalid video ID");
+  if (playlist.videos.includes(videoId)) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(400, null, "Video already exists in the playlist.")
+      );
+  }
   playlist.videos.push(videoId);
   await playlist.save();
 
@@ -76,6 +85,11 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
+  if (!videoId) throw new ApiError(400, "Need VideoId to remove it");
+  const video = await Video.findById(videoId);
+
+  if (!video) throw new ApiError(400, "Invalid video ID");
+
   await Playlist.updateOne({ _id: playlistId }, { $pull: { videos: videoId } });
 
   return res
@@ -95,8 +109,9 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     ok: 1
   };
   */
-  if (!result || result.deletedCount === undefined) {
-    throw new ApiError(400, "Error occurred while deleting playlist.");
+  console.log(result)
+  if (!result) {
+    throw new ApiError(400, "Playlist you are trying to delete does not exist");
   }
 
   return res
@@ -126,7 +141,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, {}, "Playlist details updated successfully."));
+    .json(new ApiResponse(200, playlist, "Playlist details updated successfully."));
 });
 
 export {

@@ -28,16 +28,51 @@ const getVideoComments = asyncHandler(async (req, res) => {
     const comments = await Comment.aggregate([
       {
         $match: {
-          video: videoId
+          video: new mongoose.Types.ObjectId(videoId),
         },
       },
       {
         $skip: skip, //number of elements to skip
-      }, 
+      },
       {
-        $limit: parsedLimit //number of elements to include
-      }, 
+        $limit: parsedLimit, //number of elements to include
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner"
+        }
+      },
+      {
+        $addFields:{
+          owner: {
+            $first: "$owner"
+          }
+        }
+      },
+      {
+        $project: {
+          "owner.password": 0,
+          "owner.refreshToken": 0,
+          "owner.createdAt": 0,
+          "owner.updatedAt": 0,
+          "owner.__v": 0
+        }
+      }
+      
     ]);
+
+    if (comments.length === 0) {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, comments, "No comments for this video"));
+    }
+
+    // comments
+    //   .populate("owner")
+    //   .select("-password -refreshToken -createdAt -updatedAt");
 
     return res
       .status(200)
@@ -74,13 +109,13 @@ const addComment = asyncHandler(async (req, res) => {
 const updateComment = asyncHandler(async (req, res) => {
   // TODO: update a comment
   const { commentId } = req.params;
-  const { updatedContent } = req.body;
+  const { content } = req.body;
 
   if (!commentId) throw new ApiError(404, "comment ID missing");
 
   const updatedComment = await Comment.findByIdAndUpdate(
     commentId,
-    { content: updatedContent },
+    { content },
     { new: true }
   );
   if (!updatedComment)

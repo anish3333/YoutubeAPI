@@ -16,7 +16,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
   const videoStats = await Video.aggregate([
     {
       $match: {
-        owner: mongoose.Types.ObjectId(userId),
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -28,40 +28,40 @@ const getChannelStats = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const totalSubscribers = await Subscription.aggregate([
-    {
-      $match: {
-        channel: mongoose.Types.ObjectId(userId),
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        subscribers: { $sum: 1 },
-      },
-    },
-  ]);
+  // const totalSubscribers = await Subscription.aggregate([
+  //   {
+  //     $match: {
+  //       channel: new mongoose.Types.ObjectId(userId),
+  //     },
+  //   },
+  //   {
+  //     $group: {
+  //       _id: null,
+  //       subscribers: { $sum: 1 },
+  //     },
+  //   },
+  // ]);
 
-  const totalChannelsSubscribedTo = await Subscription.aggregate([
-    {
-      $match: {
-        subscriber: mongoose.Types.ObjectId(userId),
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        subscribedTo: { $sum: 1 },
-      },
-    },
-  ]);
+  // const totalChannelsSubscribedTo = await Subscription.aggregate([
+  //   {
+  //     $match: {
+  //       subscriber: new mongoose.Types.ObjectId(userId),
+  //     },
+  //   },
+  //   {
+  //     $group: {
+  //       _id: null,
+  //       subscribedTo: { $sum: 1 },
+  //     },
+  //   },
+  // ]);
 
   const channelStats = await Subscription.aggregate([
     {
       $match: {
         $or: [
-          { subscriber: mongoose.Types.ObjectId(userId) },
-          { channel: mongoose.Types.ObjectId(userId) },
+          { subscriber: new mongoose.Types.ObjectId(userId) },
+          { channel: new mongoose.Types.ObjectId(userId) },
         ],
       },
     },
@@ -71,7 +71,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         subscribers: {
           $sum: {
             $cond: [
-              { $eq: ["$channel", mongoose.Types.ObjectId(userId)] },
+              { $eq: ["$channel", new mongoose.Types.ObjectId(userId)] },
               1,
               0,
             ],
@@ -80,7 +80,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         subscribedTo: {
           $sum: {
             $cond: [
-              { $eq: ["$subscriber", mongoose.Types.ObjectId(userId)] },
+              { $eq: ["$subscriber", new mongoose.Types.ObjectId(userId)] },
               1,
               0,
             ],
@@ -93,7 +93,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
   const totalLikesByUser = await Like.aggregate([
     {
       $match: {
-        $likedBy: mongoose.Types.ObjectId(userId),
+        likedBy: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -107,8 +107,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
   const response = {
     videoStats,
     channelStats,
-    totalSubscribers,
-    totalChannelsSubscribedTo,
+    // totalSubscribers,
+    // totalChannelsSubscribedTo,
     totalLikesByUser,
   };
 
